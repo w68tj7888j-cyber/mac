@@ -259,6 +259,19 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadBtn.className = 'download-link btn-blue';
             downloadBtn.textContent = 'Download';
             
+            // Add click listener to show downloading state
+            downloadBtn.onclick = () => {
+                const originalText = downloadBtn.textContent;
+                const downloadingText = currentLang === 'ko' ? '다운로드 중' : 'Downloading';
+                downloadBtn.innerHTML = `${downloadingText}<span class="dot-ani">.</span><span class="dot-ani">.</span><span class="dot-ani">.</span>`;
+                downloadBtn.style.pointerEvents = 'none'; // Prevent double clicks
+                
+                setTimeout(() => {
+                    downloadBtn.textContent = originalText;
+                    downloadBtn.style.pointerEvents = 'auto';
+                }, 2000);
+            };
+            
             div.appendChild(img);
             div.appendChild(document.createElement('br'));
             div.appendChild(downloadBtn);
