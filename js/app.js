@@ -174,14 +174,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const results = [];
         const batchSize = 4;
         
+        // 이미지 로딩 처리 (메모리 절약을 위해 하나씩 처리하거나 Promise.all 후 관리)
         const images = await Promise.all(files.map(file => {
             return new Promise((resolve) => {
                 const img = new Image();
+                const url = URL.createObjectURL(file);
                 img.onload = () => {
-                    URL.revokeObjectURL(img.src);
+                    img._url = url; // 나중에 해제하기 위해 저장
                     resolve(img);
                 };
-                img.src = URL.createObjectURL(file);
+                img.src = url;
             });
         }));
 
@@ -192,9 +194,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 canvas: canvas,
                 filename: `LimitSaver_merged_${Math.floor(i/batchSize) + 1}.png`
             });
-            // UI 스레드 양보 (성능 최적화)
             await new Promise(resolve => setTimeout(resolve, 0));
         }
+
+        // 모든 처리 완료 후 오브젝트 URL 일괄 해제
+        images.forEach(img => {
+            if (img._url) URL.revokeObjectURL(img._url);
+        });
 
         return results;
     }
@@ -203,26 +209,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-        const maxWidth = Math.max(...batch.map(img => img.width));
-        const maxHeight = Math.max(...batch.map(img => img.height));
+        // 성능 및 안정성을 위해 최대 해상도 제한 (4K급으로 제한)
+        const MAX_SINGLE_WIDTH = 2048;
+        const MAX_SINGLE_HEIGHT = 2048;
+
+        let baseWidth = Math.min(Math.max(...batch.map(img => img.width)), MAX_SINGLE_WIDTH);
+        let baseHeight = Math.min(Math.max(...batch.map(img => img.height)), MAX_SINGLE_HEIGHT);
 
         let canvasWidth, canvasHeight;
         let positions = [];
 
         if (batch.length === 1) {
-             canvasWidth = maxWidth;
-             canvasHeight = maxHeight;
+             canvasWidth = baseWidth;
+             canvasHeight = baseHeight;
              positions = [{ x: 0, y: 0 }];
         } else if (batch.length === 2) {
-            canvasWidth = maxWidth * 2;
-            canvasHeight = maxHeight;
-            positions = [{ x: 0, y: 0 }, { x: maxWidth, y: 0 }];
+            canvasWidth = baseWidth * 2;
+            canvasHeight = baseHeight;
+            positions = [{ x: 0, y: 0 }, { x: baseWidth, y: 0 }];
         } else {
-            canvasWidth = maxWidth * 2;
-            canvasHeight = maxHeight * 2;
+            canvasWidth = baseWidth * 2;
+            canvasHeight = baseHeight * 2;
             positions = [
-                { x: 0, y: 0 }, { x: maxWidth, y: 0 },
-                { x: 0, y: maxHeight }, { x: maxWidth, y: maxHeight }
+                { x: 0, y: 0 }, { x: baseWidth, y: 0 },
+                { x: 0, y: baseHeight }, { x: baseWidth, y: baseHeight }
             ];
         }
 
@@ -237,13 +247,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         batch.forEach((img, index) => {
             const pos = positions[index];
-            const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
-            const centerShiftX = (maxWidth - img.width * ratio) / 2;
-            const centerShiftY = (maxHeight - img.height * ratio) / 2;
+            const ratio = Math.min(baseWidth / img.width, baseHeight / img.height);
+            const drawW = img.width * ratio;
+            const drawH = img.height * ratio;
+            const centerShiftX = (baseWidth - drawW) / 2;
+            const centerShiftY = (baseHeight - drawH) / 2;
             
             ctx.drawImage(img, 
                 pos.x + centerShiftX, pos.y + centerShiftY, 
-                img.width * ratio, img.height * ratio
+                drawW, drawH
             );
         });
 
