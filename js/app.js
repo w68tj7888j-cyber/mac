@@ -259,11 +259,29 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadBtn.className = 'download-link btn-blue';
             downloadBtn.textContent = 'Download';
             
-            // Add click listener to show downloading state
+            // Add click listener to show downloading state without changing text size
             downloadBtn.onclick = () => {
-                const originalText = downloadBtn.textContent;
-                const downloadingText = currentLang === 'ko' ? '다운로드 중' : 'Downloading';
-                downloadBtn.innerHTML = `${downloadingText}<span class="dot-ani">.</span><span class="dot-ani">.</span><span class="dot-ani">.</span>`;
+                const originalContent = downloadBtn.innerHTML;
+                downloadBtn.innerHTML = `${originalContent}<span class="dot-ani dot-white">.</span><span class="dot-ani dot-white">.</span><span class="dot-ani dot-white">.</span>`;
+                downloadBtn.style.pointerEvents = 'none'; // Prevent double clicks
+                
+                setTimeout(() => {
+                    downloadBtn.innerHTML = originalContent;
+                    downloadBtn.style.pointerEvents = 'auto';
+                }, 1500);
+            };
+            
+            div.appendChild(img);
+            div.appendChild(document.createElement('br'));
+            div.appendChild(downloadBtn);
+            previewContainer.appendChild(div);
+        });
+    }
+
+    // Initialize language on load
+    setLanguage('ko');
+});
+ni">.</span>`;
                 downloadBtn.style.pointerEvents = 'none'; // Prevent double clicks
                 
                 setTimeout(() => {

@@ -376,6 +376,11 @@ footer {
     margin-left: 2px;
 }
 
+.dot-white {
+    color: #ffffff !important;
+    font-size: 1rem !important;
+}
+
 @keyframes dot-blink {
     0%, 80%, 100% { opacity: 0.2; transform: scale(1); }
     40% { opacity: 1; transform: scale(1.3); }
