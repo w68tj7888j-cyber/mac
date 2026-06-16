@@ -264,4 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
             previewContainer.appendChild(div);
         });
     }
+
+    // Initialize language on load
+    setLanguage('ko');
 });
