@@ -155,7 +155,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     mergeBtn.addEventListener('click', async () => {
         statusMessage.textContent = "";
-        previewContainer.innerHTML = "<p>이미지 병합 중...</p>";
+        const mergingText = currentLang === 'ko' ? '이미지 병합 중' : 'Merging Images';
+        previewContainer.innerHTML = `
+            <div class="merging-text">
+                ${mergingText}
+                <div class="loading-dots">
+                    <span>.</span><span>.</span><span>.</span>
+                </div>
+            </div>
+        `;
         mergeBtn.disabled = true;
 
         const processedImages = await processFiles(selectedFiles);
