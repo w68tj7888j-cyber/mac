@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
             'contact-title': '문의 및 지원',
             'contact-desc': '서비스 이용 중 제안 사항이나 버그 제보는 아래 고객지원 폼을 이용해 주시기 바랍니다. 모든 문의는 관리자가 직접 확인 하여 신속하게 답변드립니다.',
             'contact-btn': '고객지원 폼 작성하기'
-            },
-            en: {
+        },
+        en: {
             'hero-title': 'Merge Images',
             'hero-desc': 'Combine multiple images into one to save your AI upload limits.',
             'upload-btn': 'File Upload',
@@ -159,12 +159,15 @@ document.addEventListener('DOMContentLoaded', () => {
         previewContainer.innerHTML = `<p>${mergingText}<span class="dot-ani">.</span><span class="dot-ani">.</span><span class="dot-ani">.</span></p>`;
         mergeBtn.disabled = true;
 
-        const processedImages = await processFiles(selectedFiles);
-        renderPreviews(processedImages);
-        
-        mergeBtn.disabled = false;
-        mergeBtn.className = 'btn-gray';
-        uploadBtn.className = 'btn-gray';
+        // UI 업데이트를 위한 짧은 지연 (렉 방지)
+        setTimeout(async () => {
+            const processedImages = await processFiles(selectedFiles);
+            renderPreviews(processedImages);
+            
+            mergeBtn.disabled = false;
+            mergeBtn.className = 'btn-gray';
+            uploadBtn.className = 'btn-gray';
+        }, 50);
     });
 
     async function processFiles(files) {
@@ -174,7 +177,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const images = await Promise.all(files.map(file => {
             return new Promise((resolve) => {
                 const img = new Image();
-                img.onload = () => resolve(img);
+                img.onload = () => {
+                    URL.revokeObjectURL(img.src);
+                    resolve(img);
+                };
                 img.src = URL.createObjectURL(file);
             });
         }));
@@ -186,6 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 canvas: canvas,
                 filename: `LimitSaver_merged_${Math.floor(i/batchSize) + 1}.png`
             });
+            // UI 스레드 양보 (성능 최적화)
+            await new Promise(resolve => setTimeout(resolve, 0));
         }
 
         return results;
@@ -259,11 +267,10 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadBtn.className = 'download-link btn-blue';
             downloadBtn.textContent = 'Download';
             
-            // Add click listener to show downloading state without changing text size
             downloadBtn.onclick = () => {
                 const originalContent = downloadBtn.innerHTML;
                 downloadBtn.innerHTML = `${originalContent}<span class="dot-ani dot-white">.</span><span class="dot-ani dot-white">.</span><span class="dot-ani dot-white">.</span>`;
-                downloadBtn.style.pointerEvents = 'none'; // Prevent double clicks
+                downloadBtn.style.pointerEvents = 'none';
                 
                 setTimeout(() => {
                     downloadBtn.innerHTML = originalContent;
@@ -278,25 +285,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Initialize language on load
-    setLanguage('ko');
-});
-ni">.</span>`;
-                downloadBtn.style.pointerEvents = 'none'; // Prevent double clicks
-                
-                setTimeout(() => {
-                    downloadBtn.textContent = originalText;
-                    downloadBtn.style.pointerEvents = 'auto';
-                }, 2000);
-            };
-            
-            div.appendChild(img);
-            div.appendChild(document.createElement('br'));
-            div.appendChild(downloadBtn);
-            previewContainer.appendChild(div);
-        });
-    }
-
-    // Initialize language on load
     setLanguage('ko');
 });
